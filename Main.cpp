@@ -5,28 +5,47 @@
 #include <vector>
 #include <algorithm>
 #include <deque>
+#include <cstdlib>
 
 using namespace std;
 
-const int SCREEN_WIDTH = 1000;
-const int SCREEN_HEIGHT = 700;
+const int SCREEN_WIDTH = 900;
+const int SCREEN_HEIGHT = 600;
 const string WINDOW_TITLE = "Snake";
 
 struct Box {
-    int x;
-    int y;
+    int x = 10;
+    int y = 10;
     int size = 10;
     int stepX = 0;
     int stepY = 0;
+    int xa = rand() % 100 * 5 + 0;
+    int ya = rand() % 100 * 5 + 0;
+
+    void render1(SDL_Renderer* renderer) {
+        SDL_Rect apples;
+        apples.x = xa;
+        apples.y = ya;
+        apples.w = size;
+        apples.h = size;
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_RenderFillRect(renderer, &apples);
+    }
 
     void render(SDL_Renderer* renderer) {
-        SDL_Rect filled_rect;
-        filled_rect.x = x;
-        filled_rect.y = y;
-        filled_rect.w = size;
-        filled_rect.h = size;
+        SDL_Rect head;
+        head.x = x;
+        head.y = y;
+        head.w = size;
+        head.h = size;
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-        SDL_RenderFillRect(renderer, &filled_rect);
+        SDL_RenderFillRect(renderer, &head);
+    }
+    void spawnapple() {
+        if (x == xa && y == ya) {
+            xa = rand() % 100 * 5 + 0;
+            ya = rand() % 100 * 5 + 0;
+        }
     }
 
     void move() {
@@ -65,27 +84,23 @@ int main(int argc, char* argv[])
     SDL_Renderer* renderer;
     initSDL(window, renderer, SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
 
-    SDL_Texture* background = loadTexture("Background.png", renderer);
-    SDL_RenderCopy(renderer, background, NULL, NULL);
-
+    SDL_Texture* instruction = loadTexture("instruction.png", renderer);
+    SDL_RenderCopy(renderer, instruction, NULL, NULL);
     SDL_RenderPresent(renderer);
-
-    
+    waitUntilKeyPressed();
 
     Box box;
-    box.x = 10;
-    box.y = 10;
-
+    
     SDL_Event e;
 
     while (box.inside(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)) {
         box.move();
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);     
         SDL_RenderClear(renderer);
         box.render(renderer);
+        box.spawnapple();
+        box.render1(renderer);
         SDL_RenderPresent(renderer);
-
-        SDL_Delay(10);
 
         if (SDL_PollEvent(&e) == 0) continue;
 
@@ -102,6 +117,17 @@ int main(int argc, char* argv[])
             }
         }
     }
+
+    SDL_Texture* background = loadTexture("gameover.png", renderer);
+    SDL_RenderCopy(renderer, background, NULL, NULL);
+    SDL_RenderPresent(renderer);
+    waitUntilKeyPressed();
+
+
+    SDL_DestroyTexture(background);
+    background = NULL;
+    SDL_DestroyTexture(instruction);
+    instruction = NULL;
 
     quitSDL(window, renderer);
     return 0;
